@@ -1,12 +1,13 @@
 ##!/bin/python
 
-import sys
-import random
-import os
-import json
 import getopt
+import json
+import os
+import random
+import sys
 
-class UI(object):
+
+class CommandLine(object):
 
     def __init__(self):
         self.quiz          = False
@@ -56,7 +57,6 @@ class UI(object):
                 
 
 def readQuizFile(topic):
-
     filename = "./questions/"+topic+".JSON"
 
     try:
@@ -72,20 +72,22 @@ def readQuizFile(topic):
         sys.exit()
         
     f.close()
-
     return questions
+
 
 def getTopics():
     return [f.replace('.JSON','')
             for f in os.listdir("./questions")
             if f.endswith(".JSON")]
-   
+
+
 def getSections(topic, questions):
     sections = []
     for q in questions:
         if q.get("T") == topic and q.get("S") not in sections:
             sections.append(q.get("S"))
     return list(sections)
+
 
 def readAll():
     questions = []
@@ -101,12 +103,14 @@ def countQuestionsInTopic(topic, questions):
             topic_count += 1
     return topic_count        
 
+
 def selectQuestionByTopic(topic, questions):
     result = []
     for q in questions:
         if q.get("T") == topic: 
            result.append(q)
-    return result   
+    return result
+
 
 def selectQuestionByTopicAndSection(topic, section, questions):
     result = []
@@ -148,9 +152,11 @@ def doQuiz(cmd, questions):
         
 def main(argv):
 
-    cmd = UI()
-    cmd.commands(argv)    
+    cmd = CommandLine()
+    cmd.commands(argv)
+    
     questions = readAll()
+
     if cmd.all_questions == True:
         topic_list = getTopics()
         print "There are %d topics for a total of %d questions:" % (len(topic_list), len(questions))
@@ -159,6 +165,7 @@ def main(argv):
             section_list = getSections(t, questions)
             for s in section_list:
                 print "\t",s
+                
     elif cmd.topic != "":
         if cmd.quiz == False:
             cmd.quiz = True
