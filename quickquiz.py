@@ -56,6 +56,7 @@ class UI(object):
                 
 
 def readQuizFile(topic):
+
     filename = "./questions/"+topic+".JSON"
 
     try:
@@ -76,7 +77,7 @@ def readQuizFile(topic):
 
 def getTopics():
     return [f.replace('.JSON','')
-            for f in os.listdir("/home/g/python/quickquiz/questions")
+            for f in os.listdir("./questions")
             if f.endswith(".JSON")]
    
 def getSections(topic, questions):
