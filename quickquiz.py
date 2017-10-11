@@ -4,8 +4,9 @@ import getopt
 import json
 import os
 import random
+import shutil
 import sys
-
+import time
 
 class CommandLine(object):
 
@@ -15,6 +16,8 @@ class CommandLine(object):
         self.section       = ""
         self.randomQ       = False
         self.all_questions = False
+        self.pretty        = ""
+        self.webserver     = False
         
     def show_help(self):
         print "QuickQuiz is a simple quiz facility that allows you to test yourself."
@@ -25,12 +28,43 @@ class CommandLine(object):
         print "-t --topic=     Select topic=<topic>."
         print "-s --section=   Select section=<section>"
         print "-r --random     Select random questions from all available topics."
+        print "-p --pretty=     Pretty prints a question file."
+        #print "-w --webserver  Start a webserver and serve the quiz in html."
+        #print "-i --info       Information about the webserver."
+        #print "-c --concept    The concept behind QuickQuiz."
+        #print "-v --vintage    Use retired question sets."
 
         
+    def show_concept(self):
+        print """ 
+QQ is a very simple cramming aid --- you check your answers yourself,
+and there is no typing involved, just thinking or maybe talking out
+loud.  
+
+The rationale behind QQ is that usually typing answers is not only
+tedious and time consuming (time you could invest better to think
+about things more!) and, there is the fact that checking answers
+algorithmically is very difficult and often the correct answer ends up
+parsed as incorrect.
+
+More than one can play, either you can compete TV style and the
+first person to exclaim 'beep' gets the first bite at answering, or
+you can write your answer on a piece of paper you then exchange.
+
+QQ will let you make your own question sets (best done as you learn)
+and also exchange them.  You can move question sets you no longer want
+to answer to the vintage directory, and if you ever want some
+nostalgia, you can add those topics with the '-v' command to a
+workout.
+
+Happy studying!
+"""
+
+
     def commands(self, argv):
         try:
-            opts, args = getopt.getopt(argv, "haqt:s:",
-                                       ["help","all","topics=", "sections=", "quiz","topic=","section="])
+            opts, args = getopt.getopt(argv, "haqt:s:p:",
+                                       ["help","all","topics=", "sections=", "quiz","topic=","section=","pretty="])
         except getopt.GetoptError:
             self.show_help()
             sys.exit(2)
@@ -54,7 +88,9 @@ class CommandLine(object):
 
             if opt in ("-r", "--random"):                
                 self.randomQ = True
-                
+            
+            if opt in ("-p", "--pretty"):                
+                self.pretty = arg
 
 def readQuizFile(topic):
     filename = "./questions/"+topic+".JSON"
@@ -148,15 +184,40 @@ def doQuiz(cmd, questions):
             question_count, question_total, correct, wrong )
         if result == 'q':
             sys.exit()
-            
+
+def prettyPrint(messyFile):
+    filename = "./questions/"+messyFile
+    if not os.path.isfile(filename):
+        print "The file %s does not exist." % (filename)
+        sys.exit()
+    try:
+        epoch = int(time.time())
+        backupFile = "./backup/"+messyFile+str(epoch)
+        shutil.move(filename, backupFile)
+        b = open(backupFile,"r")
+        
+    except IOError:
+        print "There was an error opening: ",filename
+        sys.exit()
+
+    questions = json.loads(b.read())['questions']
+    b.close()
+    f = open(filename,"w")
+    f.write(json.dumps(questions, indent=4))
+    f.close()
+    sys.exit()
+    
         
 def main(argv):
 
     cmd = CommandLine()
     cmd.commands(argv)
-    
-    questions = readAll()
 
+    if cmd.pretty != "":
+        prettyPrint(cmd.pretty)
+
+    questions = readAll()
+        
     if cmd.all_questions == True:
         topic_list = getTopics()
         print "There are %d topics for a total of %d questions:" % (len(topic_list), len(questions))
