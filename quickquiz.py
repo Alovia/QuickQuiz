@@ -3,7 +3,7 @@
 import getopt
 import json
 import os
-import random
+# import random
 import shutil
 import sys
 import time
@@ -18,7 +18,7 @@ class CommandLine(object):
         self.all_questions = False
         self.pretty        = ""
         self.webserver     = False
-        
+
     def show_help(self):
         print "QuickQuiz is a simple quiz facility that allows you to test yourself."
         print "\nOptions:"
@@ -28,18 +28,18 @@ class CommandLine(object):
         print "-t --topic=     Select topic=<topic>."
         print "-s --section=   Select section=<section>"
         print "-r --random     Select random questions from all available topics."
-        print "-p --pretty=     Pretty prints a question file."
+        print "-p --pretty=    Pretty prints a question file."
         #print "-w --webserver  Start a webserver and serve the quiz in html."
         #print "-i --info       Information about the webserver."
         #print "-c --concept    The concept behind QuickQuiz."
         #print "-v --vintage    Use retired question sets."
 
-        
+
     def show_concept(self):
-        print """ 
+        print """
 QQ is a very simple cramming aid --- you check your answers yourself,
 and there is no typing involved, just thinking or maybe talking out
-loud.  
+loud.
 
 The rationale behind QQ is that usually typing answers is not only
 tedious and time consuming (time you could invest better to think
@@ -64,11 +64,12 @@ Happy studying!
     def commands(self, argv):
         try:
             opts, args = getopt.getopt(argv, "haqt:s:p:",
-                                       ["help","all","topics=", "sections=", "quiz","topic=","section=","pretty="])
+                                    ["help","all","topics=", "sections=",
+                                     "quiz","topic=","section=","pretty="])
         except getopt.GetoptError:
             self.show_help()
             sys.exit(2)
-    
+
         for opt, arg in opts:
             if opt in ("-h", "--help"):
                 self.show_help()
@@ -77,20 +78,21 @@ Happy studying!
             if opt in ("-a", "--all"):
                 self.all_questions = True
 
-            if opt in ("-q", "--quiz"):                
+            if opt in ("-q", "--quiz"):
                 self.quiz = True
 
-            if opt in ("-t", "--topic"):                
+            if opt in ("-t", "--topic"):
                 self.topic = arg
 
-            if opt in ("-s", "--section"):                
+            if opt in ("-s", "--section"):
                 self.section = arg
 
-            if opt in ("-r", "--random"):                
+            if opt in ("-r", "--random"):
                 self.randomQ = True
-            
-            if opt in ("-p", "--pretty"):                
+
+            if opt in ("-p", "--pretty"):
                 self.pretty = arg
+
 
 def readQuizFile(topic):
     filename = "./questions/"+topic+".JSON"
@@ -100,13 +102,13 @@ def readQuizFile(topic):
     except IOError:
         print "There was an error opening:", filename
         sys.exit()
-        
+
     try:
         questions = json.loads(f.read())['questions']
     except (ValueError, KeyError, TypeError):
-        print "JSON format error: maybe a trailing comma?"
+        print "JSON format error: maybe a trailing comma in File: "+filename
         sys.exit()
-        
+
     f.close()
     return questions
 
@@ -135,15 +137,15 @@ def readAll():
 def countQuestionsInTopic(topic, questions):
     topic_count = 0
     for q in questions:
-        if q.get("T") in topic: 
+        if q.get("T") in topic:
             topic_count += 1
-    return topic_count        
+    return topic_count
 
 
 def selectQuestionByTopic(topic, questions):
     result = []
     for q in questions:
-        if q.get("T") == topic: 
+        if q.get("T") == topic:
            result.append(q)
     return result
 
@@ -151,21 +153,21 @@ def selectQuestionByTopic(topic, questions):
 def selectQuestionByTopicAndSection(topic, section, questions):
     result = []
     for q in questions:
-        if q.get("T") == topic and q.get("S") == section: 
+        if q.get("T") == topic and q.get("S") == section:
            result.append(q)
-    return result   
+    return result
 
 
 def doQuiz(cmd, questions):
 
     if cmd.randomQ == True:
         shuffle(questions)
-        
+
     correct = 0
     wrong = 0
     question_count = 0
     question_total = len(questions)
-    
+
     for q in questions:
         question_count += 1
         print "Topic:",      q.get("T")
@@ -185,6 +187,7 @@ def doQuiz(cmd, questions):
         if result == 'q':
             sys.exit()
 
+
 def prettyPrint(messyFile):
     filename = "./questions/"+messyFile
     if not os.path.isfile(filename):
@@ -195,7 +198,7 @@ def prettyPrint(messyFile):
         backupFile = "./backup/"+messyFile+str(epoch)
         shutil.move(filename, backupFile)
         b = open(backupFile,"r")
-        
+
     except IOError:
         print "There was an error opening: ",filename
         sys.exit()
@@ -206,8 +209,8 @@ def prettyPrint(messyFile):
     f.write(json.dumps(questions, indent=4))
     f.close()
     sys.exit()
-    
-        
+
+
 def main(argv):
 
     cmd = CommandLine()
@@ -217,7 +220,7 @@ def main(argv):
         prettyPrint(cmd.pretty)
 
     questions = readAll()
-        
+
     if cmd.all_questions == True:
         topic_list = getTopics()
         print "There are %d topics for a total of %d questions:" % (len(topic_list), len(questions))
@@ -226,16 +229,16 @@ def main(argv):
             section_list = getSections(t, questions)
             for s in section_list:
                 print "\t",s
-                
+
     elif cmd.topic != "":
         if cmd.quiz == False:
             cmd.quiz = True
         topic_list = getTopics()
         if cmd.section != "":
-            questions = selectQuestionByTopicAndSection(cmd.topic, cmd.section, questions) 
+            questions = selectQuestionByTopicAndSection(cmd.topic, cmd.section, questions)
         else:
-            questions = selectQuestionByTopic(cmd.topic, questions) 
-            
+            questions = selectQuestionByTopic(cmd.topic, questions)
+
     if cmd.quiz == True:
         if len(questions) > 0:
             doQuiz(cmd, questions)
